@@ -1,14 +1,13 @@
 #ifndef GSL_MATH_H
 #define GSL_MATH_H
 
+#include "gltypes.h"
+#include "math_constants.h"
+#include "matrix3x3.h"
 #include "vector2d.h"
 #include "vector3d.h"
 #include "vector4d.h"
-#include "math_constants.h"
-#include "gltypes.h"
-#include "matrix3x3.h"
 #include <vector>
-
 namespace gsl
 {
     //Functions
@@ -39,5 +38,6 @@ namespace gsl
     bool withinPlane(const Vector3D &point, Matrix4x4 &modelMatrix, Vector2D upright, Vector2D downleft);
 
 } //namespace
+
 
 #endif // GSL_MATH_H

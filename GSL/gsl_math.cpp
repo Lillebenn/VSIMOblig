@@ -1,95 +1,71 @@
 #include "gsl_math.h"
+#include "matrix4x4.h"
+#include <QDebug>
 #include <array>
 #include <vector>
-#include <QDebug>
-#include "matrix4x4.h"
 
-namespace gsl
-{
-    GLdouble rad2deg(GLdouble rad)
-    {
-        return rad * (180.0 / PI_D);
-    }
+namespace gsl {
+GLdouble rad2deg(GLdouble rad) {
+    return rad * (180.0 / PI_D);
+}
 
-    GLdouble deg2rad(GLdouble deg)
-    {
-        return deg * (PI_D / 180.0);
-    }
+GLdouble deg2rad(GLdouble deg) {
+    return deg * (PI_D / 180.0);
+}
 
-    GLfloat rad2degf(GLfloat rad)
-    {
-        return rad * (180.0f / PI);
-    }
+GLfloat rad2degf(GLfloat rad) {
+    return rad * (180.0f / PI);
+}
 
-    GLfloat deg2radf(GLfloat deg)
-    {
-        return deg * (PI / 180.0f);
-    }
-
-    //Calculates the points on a bezier curve. Input t from 0 to 1
-    Vector3D bezierCurve(std::vector<Vector3D> points, GLfloat t, unsigned long long degree)
-    {
-        for (unsigned long long k = 0; k < degree; k++)
-        {
-            for (unsigned long long i = 0; i < degree - k - 1; i++)
-            {
-                points[i] = points[i] * (1.f - t) + points[i + 1] * t;
-            }
+GLfloat deg2radf(GLfloat deg) {
+    return deg * (PI / 180.0f);
+}
+bool within(double x) {
+    return (x >= 0) && (x <= 1);
+}
+//Calculates the points on a bezier curve. Input t from 0 to 1
+Vector3D bezierCurve(std::vector<Vector3D> points, GLfloat t, unsigned long long degree) {
+    for (unsigned long long k = 0; k < degree; k++) {
+        for (unsigned long long i = 0; i < degree - k - 1; i++) {
+            points[i] = points[i] * (1.f - t) + points[i + 1] * t;
         }
-
-        return points[0];
     }
 
-    //Calculates the points on a basis spline curve. Input t from 0 to 1.
-    Vector3D bSpline(const std::vector<Vector3D>& points, const std::vector<GLfloat> &t, GLfloat x, unsigned long long degree)
-    {
-        //CALCULATE VALID KNOT INTERVAL 'MY'
-        unsigned long long my;
-        for (my = 0; my < points.size(); my++)
-        {
-            if (x < t[my+1])
-                break;
-        }
+    return points[0];
+}
 
-        //CALCULATE BASIS FUNCTIONS
-        std::vector<GLfloat> basis(t.size());
-        for (unsigned long long j = 0; j <= degree; j++)
-        {
-            for (unsigned long long i = (my-j); i <= my; i++)
-            {
-                if (j == 0)
-                {
-                    basis[i] = 1.f;
-                }
+//Calculates the points on a basis spline curve. Input t from 0 to 1.
+Vector3D bSpline(const std::vector<Vector3D> &points, const std::vector<GLfloat> &t, GLfloat x, unsigned long long degree) {
+    //CALCULATE VALID KNOT INTERVAL 'MY'
+    unsigned long long my;
+    for (my = 0; my < points.size(); my++) {
+        if (x < t[my + 1])
+            break;
+    }
+
+    //CALCULATE BASIS FUNCTIONS
+    std::vector<GLfloat> basis(t.size());
+    for (unsigned long long j = 0; j <= degree; j++) {
+        for (unsigned long long i = (my - j); i <= my; i++) {
+            if (j == 0) {
+                basis[i] = 1.f;
+            } else {
+                GLfloat left, right;
+
+                if (basis[i] != 0.f)
+                    left = ((x - t[i]) / (t[i + j] - t[i])) * basis[i];
                 else
-                {
-                    GLfloat left, right;
+                    left = 0.f;
 
-                    if (basis[i] != 0.f)
-                        left = ((x - t[i]) / (t[i+j] - t[i])) * basis[i];
-                    else
-                        left = 0.f;
+                if (basis[i + 1] != 0.f)
+                    right = ((t[i + j + 1] - x) / (t[i + j + 1] - t[i + 1])) * basis[i + 1];
+                else
+                    right = 0.f;
 
-                    if (basis[i+1] != 0.f)
-                        right = ((t[i+j+1] - x) / (t[i+j+1] - t[i+1])) * basis[i+1];
-                    else
-                        right = 0.f;
-
-                    basis[i] = left + right;
-                }
+                basis[i] = left + right;
             }
         }
-
-        //MULTIPLY POINTS WITH BASIS FUNCTIONS
-        Vector3D result;
-        for (unsigned long long i = 0; i < points.size(); i++)
-        {
-            result += points[i] * basis[i];
-        }
-
-        return result;
     }
-
     Vector3D up()
     {
         return Vector3D{0.f, 1.f, 0.f};
